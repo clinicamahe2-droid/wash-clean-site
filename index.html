@@ -70,7 +70,7 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 @media (max-width:820px){.links a:not(.btn){display:none}}
 
 /* palco 3D */
-#lavar{height:1100vh;position:relative;background:var(--bg)}
+#lavar{height:680vh;position:relative;background:var(--bg)}
 .stage{position:sticky;top:0;height:100vh;height:100svh;overflow:hidden}
 #gl{position:absolute;inset:0;width:100%;height:100%;display:block}
 .hero-text{position:absolute;left:0;right:0;top:calc(env(safe-area-inset-top,0px) + 112px);z-index:3}
@@ -630,21 +630,18 @@ const isPhone=()=>innerWidth/innerHeight<1;
 
 /* ---------- cenas, em ordem de rolagem ---------- */
 const SC=[
-  {id:'hero',  from:0,   to:.06, kind:'hero',  img:'clean', f:[.45,.55]},
-  {id:'dirty', from:.045,to:.15, kind:'still', img:'dirty', z:[1.0,1.07], f:[.45,.58], cap:['Traga sujo.','A gente resolve.']},
-  {id:'wash',  from:.14, to:.34, kind:'wipe',  a:'dirty', b:'clean', z:[1.07,1.1], f:[.45,.58], cap:['Role para','lavar.']},
-  {id:'zoom',  from:.33, to:.40, kind:'still', img:'clean', z:[1.1,2.7], f:[.3,.4]},
-  {id:'swirl', from:.385,to:.47, kind:'still', img:'swirl', z:[1.18,1.0], f:[.47,.5], cap:['De perto,','os riscos.']},
-  {id:'polish',from:.46, to:.60, kind:'wipe', a:'swirl', b:'polished', soft:true, z:[1.0,1.05], f:[.45,.5], cap:['Risco sai.','Brilho fica.']},
-  {id:'t0',    from:.59, to:.652,kind:'wipe', a:'head-old', b:'headlight', soft:true, w:[.06,.5], z:[1.0,1.07], f:[.52,.58], tour:0, spot:[.53,.6]},
-  {id:'t1',    from:.642,to:.704,kind:'wipe', a:'paint-dull', b:'paint-beads', soft:true, w:[.06,.5], z:[1.0,1.06], f:[.58,.45], tour:1, spot:[.6,.45]},
-  {id:'t2',    from:.694,to:.756,kind:'wipe', a:'glass-beads', aFilter:'blur(3.5px) contrast(.82) brightness(1.06) saturate(.6)', b:'glass-beads', soft:true, w:[.06,.5], z:[1.0,1.06], f:[.5,.45], tour:2, spot:[.5,.42]},
-  {id:'t3',    from:.746,to:.808,kind:'wipe', a:'wheel-dirty', b:'wheel', soft:true, w:[.06,.5], z:[1.0,1.07], f:[.52,.52], tour:3, spot:[.52,.51]},
-  {id:'t4',    from:.798,to:.86, kind:'wipe', a:'interior-dirty', b:'interior', soft:true, w:[.06,.5], z:[1.0,1.06], f:[.6,.58], tour:4, spot:[.62,.6]},
-  {id:'door',  from:.85, to:1.0, kind:'fade', a:'clean', b:'door', z:[1.2,1.14], f:[.4,.55], end:true}
+  {id:'hero',  from:0,   to:.05, kind:'hero',  img:'clean', f:[.45,.55]},
+  {id:'t0',    from:.035,to:.145,kind:'wipe', a:'dirty', b:'clean', w:[.06,.5], z:[1.0,1.06], f:[.45,.58], tour:0, spot:[.42,.52]},
+  {id:'t1',    from:.135,to:.245,kind:'wipe', a:'swirl', b:'polished', soft:true, w:[.06,.5], z:[1.0,1.05], f:[.47,.5], tour:1, spot:[.47,.5]},
+  {id:'t2',    from:.235,to:.345,kind:'wipe', a:'head-old', b:'headlight', soft:true, w:[.06,.5], z:[1.0,1.07], f:[.52,.58], tour:2, spot:[.53,.6]},
+  {id:'t3',    from:.335,to:.445,kind:'wipe', a:'paint-dull', b:'paint-beads', soft:true, w:[.06,.5], z:[1.0,1.06], f:[.58,.45], tour:3, spot:[.6,.45]},
+  {id:'t4',    from:.435,to:.545,kind:'wipe', a:'glass-beads', aFilter:'blur(3.5px) contrast(.82) brightness(1.06) saturate(.6)', b:'glass-beads', soft:true, w:[.06,.5], z:[1.0,1.06], f:[.5,.45], tour:4, spot:[.5,.42]},
+  {id:'t5',    from:.535,to:.645,kind:'wipe', a:'wheel-dirty', b:'wheel', soft:true, w:[.06,.5], z:[1.0,1.07], f:[.52,.52], tour:5, spot:[.52,.51]},
+  {id:'t6',    from:.635,to:.745,kind:'wipe', a:'interior-dirty', b:'interior', soft:true, w:[.06,.5], z:[1.0,1.06], f:[.6,.58], tour:6, spot:[.62,.6]},
+  {id:'door',  from:.735,to:1.0, kind:'fade', a:'clean', b:'door', z:[1.2,1.14], f:[.4,.55], end:true}
 ];
 const FADE=.012;
-const BOOK0=.9;
+const BOOK0=.82;
 
 /* ---------- carregamento: o que aparece primeiro chega primeiro ---------- */
 let set='',imgs={},frames={};
@@ -659,11 +656,13 @@ function loadSet(){
 
 /* ---------- tour: conteúdo dos painéis ---------- */
 const TOUR=[
-  {id:'farois',kind:'extra',where:'Faróis',t:'Revitalização dos faróis',d:'Lixamento fino, polimento da lente e verniz com filtro UV. O farol amarelado volta a clarear a pista.',side:'l'},
-  {id:'vitrificacao',kind:'main',where:'Pintura',t:'Polimento e vitrificação',d:'Correção dos riscos e camada cerâmica 9H. A água escorre sozinha e a sujeira não gruda por até três anos.',side:'r'},
-  {id:'vidros',kind:'extra',where:'Para-brisa',t:'Cristalização dos vidros',d:'Tira a marca do limpador e deixa a chuva escorrer. Melhora a visão à noite e na estrada.',side:'l'},
-  {id:'rodas',kind:'extra',where:'Rodas',t:'Descontaminação das rodas',d:'Removedor férrico dissolve o pó de freio grudado na roda e nas pinças, sem escovar o verniz.',side:'r'},
-  {id:'bancos',kind:'extra',where:'Interior',t:'Higienização dos bancos',d:'Extratora nos bancos e carpetes e vapor nas saídas de ar. Tira mancha, cheiro e ácaro.',side:'l'}
+  {id:'tecnica',kind:'main',where:'Carroceria',t:'Lavação técnica',d:'Espuma ativa, dois baldes e secagem com microfibra. Tira o barro sem arrastar areia na pintura.',side:'r'},
+  {id:'polimento',kind:'main',where:'Verniz',t:'Polimento técnico',d:'Politriz e compostos em etapas. Remove riscos e marcas circulares e devolve o brilho de fábrica.',side:'l'},
+  {id:'farois',kind:'extra',where:'Faróis',t:'Revitalização dos faróis',d:'Lixamento fino, polimento da lente e verniz com filtro UV. O farol amarelado volta a clarear a pista.',side:'r'},
+  {id:'vitrificacao',kind:'main',where:'Pintura',t:'Vitrificação 9H',d:'Depois do polimento, camada cerâmica 9H. A água escorre sozinha e a sujeira não gruda por até três anos.',side:'l'},
+  {id:'vidros',kind:'extra',where:'Para-brisa',t:'Cristalização dos vidros',d:'Tira a marca do limpador e deixa a chuva escorrer. Melhora a visão à noite e na estrada.',side:'r'},
+  {id:'rodas',kind:'extra',where:'Rodas',t:'Descontaminação das rodas',d:'Removedor férrico dissolve o pó de freio grudado na roda e nas pinças, sem escovar o verniz.',side:'l'},
+  {id:'bancos',kind:'extra',where:'Interior',t:'Higienização dos bancos',d:'Extratora nos bancos e carpetes e vapor nas saídas de ar. Tira mancha, cheiro e ácaro.',side:'r'}
 ];
 const spots=$('spots'),panels=$('panels');
 spots.innerHTML=TOUR.map((s,i)=>`<button class="spot" type="button" data-i="${i}" aria-label="${s.where}: ${s.t}"><span class="lb">${s.where}</span></button>`).join('');
