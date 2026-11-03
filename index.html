@@ -29,6 +29,10 @@
 }
 *{box-sizing:border-box}
 html{scroll-behavior:auto}
+html.lenis,html.lenis body{height:auto}
+.lenis.lenis-smooth{scroll-behavior:auto!important}
+.lenis.lenis-smooth [data-lenis-prevent]{overscroll-behavior:contain}
+.lenis.lenis-stopped{overflow:hidden}
 body{background:var(--bg);color:var(--ink);font-family:var(--text);font-size:var(--s-body);line-height:1.55;font-weight:400;-webkit-font-smoothing:antialiased}
 .frame{padding-left:var(--m);padding-right:var(--mr)}
 .wrap{max-width:1440px;margin:0 auto}
@@ -71,6 +75,7 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 
 /* palco 3D */
 #lavar{height:680vh;position:relative;background:var(--bg)}
+@media (min-width:821px){#lavar{height:1150vh}}
 .stage{position:sticky;top:0;height:100vh;height:100svh;overflow:hidden}
 #gl{position:absolute;inset:0;width:100%;height:100%;display:block}
 .hero-text{position:absolute;left:0;right:0;top:calc(env(safe-area-inset-top,0px) + 112px);z-index:3}
@@ -104,7 +109,7 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .meter span{font-size:var(--s-small);color:var(--muted)}
 .chapter.away{opacity:0;visibility:hidden}
 .track{position:absolute;left:var(--m);right:var(--mr);bottom:calc(env(safe-area-inset-bottom,0px) + 18px);height:2px;background:rgba(238,241,245,.12);z-index:3}
-.track i{display:block;height:100%;width:0;background:var(--ink)}
+.track i{display:block;height:100%;width:100%;transform:scaleX(0);transform-origin:0 0;background:var(--ink)}
 .cap-swap{transition:opacity .35s}
 .cap-swap.out{opacity:0}
 
@@ -259,6 +264,7 @@ legend{font-size:var(--s-lead);font-weight:400;margin-bottom:14px;padding:0}
 /* processo: galeria lateral */
 #processo{background:var(--surface)}
 .htrack{height:440vh;position:relative}
+@media (min-width:821px){.htrack{height:620vh}}
 .hstage{position:sticky;top:0;height:100vh;height:100svh;overflow:hidden;display:flex;flex-direction:column;justify-content:center;gap:clamp(28px,4vh,52px);padding-top:70px}
 .hclip{margin-left:var(--m);margin-right:var(--mr);overflow:hidden;border-radius:22px}
 .hrow{display:flex;gap:20px;will-change:transform}
@@ -378,7 +384,7 @@ footer{background:var(--surface);padding-block:72px calc(env(safe-area-inset-bot
 
     <div id="panels"></div>
 
-    <aside class="book" id="book" aria-labelledby="book-h" aria-hidden="true">
+    <aside class="book" id="book" aria-labelledby="book-h" aria-hidden="true" data-lenis-prevent>
       <div class="book-head"><h2 id="book-h">Agende o seu detalhe</h2><p>Escolha o carro, o serviço e o horário. A ficha vai pronta para o nosso WhatsApp.</p></div>
       <form class="config" id="cfg" novalidate>
       <div class="steps">
@@ -507,6 +513,18 @@ footer{background:var(--surface);padding-block:72px calc(env(safe-area-inset-bot
   <a class="btn" href="#agendar">Revisar e enviar</a>
 </div>
 
+<script src="https://unpkg.com/lenis@1.1.13/dist/lenis.min.js"></script>
+<script>
+// a roda do mouse anda aos saltos; no desktop a página desliza entre eles. No toque o celular já faz isso sozinho.
+window.WCScroll=(()=>{
+  if(!window.Lenis||matchMedia('(prefers-reduced-motion: reduce)').matches||!matchMedia('(pointer:fine)').matches)return null;
+  const lenis=new Lenis({lerp:.085,wheelMultiplier:.9});
+  const raf=t=>{lenis.raf(t);requestAnimationFrame(raf)};requestAnimationFrame(raf);
+  document.addEventListener('click',e=>{const a=e.target.closest('a[href^="#"]'),h=a&&a.getAttribute('href');
+    if(!h||h.length<2||h==='#agendar')return;const el=document.querySelector(h);if(!el)return;e.preventDefault();lenis.scrollTo(el)});
+  return lenis;
+})();
+</script>
 <script>
 document.documentElement.classList.add('js');
 /* ---------- orçamento, ficha, dúvidas, entradas (sem 3D) ---------- */
@@ -575,7 +593,7 @@ $('send').addEventListener('click',e=>{const miss=[];
 function setMain(id,on=true){state.main=on?id:null;MAIN.forEach(m=>{$('m-'+m.id).checked=state.main===m.id});render()}
 function setExtra(id,on){on?state.extras.add(id):state.extras.delete(id);$('x-'+id).checked=on;render()}
 document.querySelectorAll('[data-main-link]').forEach(a=>a.addEventListener('click',()=>setMain(a.dataset.mainLink)));
-document.querySelectorAll('[data-pick]').forEach(b=>b.addEventListener('click',()=>{setMain(b.dataset.pick);$('monte').scrollIntoView({behavior:'smooth'})}));
+document.querySelectorAll('[data-pick]').forEach(b=>b.addEventListener('click',()=>{setMain(b.dataset.pick);window.WCScroll?WCScroll.scrollTo($('monte')):$('monte').scrollIntoView({behavior:'smooth'})}));
 let cartWanted=false,fichaVisible=false,heroVisible=true;
 function updateCart(){$('cart').classList.toggle('on',cartWanted&&!fichaVisible&&!heroVisible)}
 new IntersectionObserver(es=>{es.forEach(en=>{fichaVisible=en.isIntersecting});updateCart()},{threshold:.15}).observe($('ficha'));
@@ -667,19 +685,23 @@ const TOUR=[
 const spots=$('spots'),panels=$('panels');
 spots.innerHTML=TOUR.map((s,i)=>`<button class="spot" type="button" data-i="${i}" aria-label="${s.where}: ${s.t}"><span class="lb">${s.where}</span></button>`).join('');
 panels.innerHTML=TOUR.map((s,i)=>`<article class="tp ${s.side}" data-i="${i}" aria-hidden="true"><span class="where">${s.where}</span><h3>${s.t}</h3><p>${s.d}</p><div class="row2"><b class="tprice" data-id="${s.id}" data-kind="${s.kind}"></b><button class="btn tadd" type="button" data-id="${s.id}" data-kind="${s.kind}" aria-pressed="false">Adicionar à ficha</button></div></article>`).join('');
+const spotEls=[...spots.querySelectorAll('.spot')],tpEls=[...panels.querySelectorAll('.tp')];
 panels.addEventListener('click',e=>{const b=e.target.closest('.tadd');if(!b)return;const on=b.getAttribute('aria-pressed')!=='true';if(b.dataset.kind==='main')WC.setMain(b.dataset.id,on);else WC.setExtra(b.dataset.id,on)});
 WC.onRender(({state,price,MAIN,EXTRA,brl})=>{
   document.querySelectorAll('.tprice').forEach(el=>{const L=el.dataset.kind==='main'?MAIN:EXTRA;const it=L.find(x=>x.id===el.dataset.id);el.textContent=brl(price(it.p,it.flat))});
   document.querySelectorAll('.tadd').forEach(b=>{const on=b.dataset.kind==='main'?state.main===b.dataset.id:state.extras.has(b.dataset.id);b.setAttribute('aria-pressed',on);b.textContent=on?'Na ficha':'Adicionar à ficha'});
 });
 WC.render();
-function scrollToP(p){const sec=$('lavar');const total=sec.offsetHeight-innerHeight;window.scrollTo({top:sec.offsetTop+total*p,behavior:reduce?'auto':'smooth'})}
+function scrollToP(p){const sec=$('lavar');const total=sec.offsetHeight-innerHeight,top=sec.offsetTop+total*p;
+  if(window.WCScroll)WCScroll.scrollTo(top,{duration:1.6});else window.scrollTo({top,behavior:reduce?'auto':'smooth'})}
 document.querySelectorAll('a[href="#agendar"]').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();scrollToP(.97)}));
 
 /* ---------- desenho ---------- */
 let W=0,H=0,dpr=1;
 function resize(){
-  dpr=Math.min(devicePixelRatio||1,2);W=stage.clientWidth;H=stage.clientHeight;
+  W=stage.clientWidth;H=stage.clientHeight;
+  // em telas grandes, limita os pixels do canvas: acima disso a foto não ganha nitidez e cada quadro pesa mais
+  dpr=Math.min(devicePixelRatio||1,2,Math.max(1,Math.sqrt(4.2e6/Math.max(1,W*H))));
   canvas.width=Math.round(W*dpr);canvas.height=Math.round(H*dpr);
   $('leader').setAttribute('viewBox',`0 0 ${W} ${H}`);
   if((isPhone()?'m':'d')!==set)loadSet();
@@ -690,6 +712,12 @@ function place(im,zoom,f,shiftX=0){
   const iw=im.naturalWidth,ih=im.naturalHeight,s0=Math.max(W/iw,H/ih),s=s0*zoom;
   const dx0=(W-iw*s0)/2,dy0=(H-ih*s0)/2,X0=dx0+f[0]*iw*s0,Y0=dy0+f[1]*ih*s0;
   return {s,dx:X0-f[0]*iw*s+shiftX,dy:Y0-f[1]*ih*s,iw,ih};
+}
+// desfocar a cada quadro trava a rolagem: desfoca a foto uma vez e reaproveita
+function filtered(sc,im){
+  if(sc._src!==im){const c=document.createElement('canvas');c.width=im.naturalWidth;c.height=im.naturalHeight;
+    const x=c.getContext('2d');x.filter=sc.aFilter;x.drawImage(im,0,0);sc._fx=c;sc._src=im}
+  return sc._fx;
 }
 function blit(im,a,g){if(!im||a<=0)return;ctx.globalAlpha=a;ctx.drawImage(im,g.dx*dpr,g.dy*dpr,g.iw*g.s*dpr,g.ih*g.s*dpr)}
 function lerp(a,b,t){return a+(b-a)*t}
@@ -715,7 +743,7 @@ function draw(){
       if(sc.tour!==undefined&&sc.spot)spotPos={i:sc.tour,x:g.dx+sc.spot[0]*g.iw*g.s,y:g.dy+sc.spot[1]*g.ih*g.s,t,a};
     }else if(sc.kind==='wipe'){
       const A=imgs[sc.a],B=imgs[sc.b];if(!A)return;const g=place(A,z,f);
-      if(sc.aFilter){ctx.filter=sc.aFilter;blit(A,a,g);ctx.filter='none';ctx.globalAlpha=a*.1;ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height)}else blit(A,a,g);
+      if(sc.aFilter){blit(filtered(sc,A),a,g);ctx.globalAlpha=a*.1;ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height)}else blit(A,a,g);
       const w=sc.w||[.05,.95],lx=lerp(-.04,1.04,sstep(w[0],w[1],t))*W;
       if(sc.tour!==undefined&&sc.spot)spotPos={i:sc.tour,x:g.dx+sc.spot[0]*g.iw*g.s,y:g.dy+sc.spot[1]*g.ih*g.s,t,a};
       if(B){ctx.save();ctx.beginPath();ctx.rect(0,0,Math.max(0,lx)*dpr,canvas.height);ctx.clip();blit(B,a,place(B,z,f));ctx.restore()}
@@ -757,17 +785,17 @@ function hud(){
   const sc=curScene(T),ci=sc&&sc.cap?SC.indexOf(sc):-1;
   const capEl=$('chapter');capEl.classList.toggle('away',ci<0);
   if(ci>=0&&ci!==cap){cap=ci;const c=$('cap');c.classList.add('out');setTimeout(()=>{$('capT').textContent=SC[ci].cap[0];$('capS').textContent=SC[ci].cap[1];c.classList.remove('out')},reduce?0:180)}
-  $('trackBar').style.width=(P*100)+'%';
-  const tourI=sc&&sc.tour!==undefined?sc.tour:-1,local=sc?clamp((T-sc.from)/(sc.to-sc.from)):0,arrived=tourI>=0&&local>.42&&local<.93;
-  document.querySelectorAll('.spot').forEach((el,i)=>{const on=spotPos&&spotPos.i===i&&tourI===i;
+  $('trackBar').style.transform=`scaleX(${P.toFixed(4)})`;
+  const tourI=sc&&sc.tour!==undefined?sc.tour:-1,local=sc?clamp((T-sc.from)/(sc.to-sc.from)):0,arrived=tourI>=0&&local>.38&&local<.95;
+  spotEls.forEach((el,i)=>{const on=spotPos&&spotPos.i===i&&tourI===i;
     if(on)el.style.transform=`translate(${spotPos.x.toFixed(1)}px,${spotPos.y.toFixed(1)}px)`;
     el.classList.toggle('on',!!on);el.classList.toggle('cur',!!on)});
-  document.querySelectorAll('.tp').forEach((el,i)=>{const on=tourI===i&&arrived;el.classList.toggle('on',on);el.setAttribute('aria-hidden',!on)});
+  tpEls.forEach((el,i)=>{const on=tourI===i&&arrived;if(el.classList.contains('on')!==on){el.classList.toggle('on',on);el.setAttribute('aria-hidden',!on)}});
   const ln=$('leadLine');
   if(arrived&&spotPos&&W>=820){const s=TOUR[tourI],pr=document.querySelector(`.tp[data-i="${tourI}"]`).getBoundingClientRect(),sr=stage.getBoundingClientRect();
     ln.setAttribute('x1',spotPos.x);ln.setAttribute('y1',spotPos.y);ln.setAttribute('x2',s.side==='r'?pr.left-sr.left:pr.right-sr.left);ln.setAttribute('y2',pr.top-sr.top+pr.height/2);ln.setAttribute('stroke-opacity',1)}
   else ln.setAttribute('stroke-opacity',0);
-  const bookOn=T>BOOK0;$('book').classList.toggle('on',bookOn);$('book').setAttribute('aria-hidden',!bookOn);
+  const bookOn=T>BOOK0,bk=$('book');if(bk.classList.contains('on')!==bookOn){bk.classList.toggle('on',bookOn);bk.setAttribute('aria-hidden',!bookOn)}
   WC.setHero(!bookOn&&$('lavar').getBoundingClientRect().bottom>innerHeight*.5);
 }
 /* ---------- laço ---------- */
@@ -776,7 +804,8 @@ function progress(){const sec=$('lavar');const total=sec.offsetHeight-innerHeigh
 function loop(){
   if(!visible){running=false;return}
   const now=performance.now(),dt=Math.min(.1,(now-lastT)/1000);lastT=now;
-  P=reduce?T:P+(T-P)*(1-Math.exp(-dt*7));if(Math.abs(T-P)<.0002)P=T;
+  // com a rolagem suave a página já desliza: a animação segue junto, sem segundo atraso
+  P=reduce||window.WCScroll?T:P+(T-P)*(1-Math.exp(-dt*7));if(Math.abs(T-P)<.0002)P=T;
   const heroOn=!reduce&&P<.07;if(heroOn)heroT+=dt;
   draw();
   if(P!==T||heroOn)requestAnimationFrame(loop);else running=false;
